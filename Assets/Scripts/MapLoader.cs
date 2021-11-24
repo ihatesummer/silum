@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 using Assets.Scripts.SumoImporter.NetFileComponents;
 using System;
 using System.Xml;
@@ -11,6 +12,7 @@ public class MapLoader
     public static string streetsFileName = "grid.net.xml";
     public static Dictionary<string, NetFileJunction> junctions;
     public static Dictionary<string, NetFileEdge> edges;
+    public static Dictionary<string, NetFileLane> lanes;
 
     static string mapFilePath;
     static float map_x_min;
@@ -18,6 +20,10 @@ public class MapLoader
     static float map_y_min;
     static float map_y_max;
     public static List<Vector3[]> polygons;
+    static float uvScaleV = 50;
+    static float uvScaleU = 1;
+    static float meshScaleX = 3.3f;
+    static float minLengthForStreetLamp = 12;
 
     public static void parseXML(string sumoPath)
     {
@@ -117,8 +123,8 @@ public class MapLoader
                                 map_x_max = float.Parse(boundaries[2]);
                                 map_y_max = float.Parse(boundaries[3]);
                                 UnityEngine.Debug.Log("Map boundaries:" +
-                                                      "\nxmin: " + map_x_min +
-                                                      "\tymin: " + map_y_min +
+                                                      "\nmap_x_min: " + map_x_min +
+                                                      "\tmap_y_min: " + map_y_min +
                                                       "\nxmax: " + map_x_max +
                                                       "\tymax: " + map_y_max);
                             }
@@ -176,96 +182,94 @@ public class MapLoader
     public static void drawStreetNetwork()
     {
         polygons = new List<Vector3[]>();
-        bool linearOption = true;
+        bool bLinearInterpolation = true;
         int laneCounter = 0;
         int streetLightCounter = 0;
-
-        // (1) Draw all Edges ------------------------------------
-        UnityEngine.Debug.Log("Inserting 3d Streets");
-
+        // (1) Draw all Edges
+        UnityEngine.Debug.Log("Inserting street segments...");
         foreach (NetFileEdge e in edges.Values)
         {
-            int edgeCounter = 0;
-            GameObject spline = new GameObject("StreetSegment_" + laneCounter++);
-            spline.transform.SetParent(network.transform);
+            int nodeCounter = 0;
+            GameObject streetSegment = new GameObject("StreetSegment_" + laneCounter++);
+            streetSegment.transform.SetParent(network.transform);
 
-            Spline splineObject = spline.AddComponent<Spline>();
+            Spline splineComponent = streetSegment.AddComponent<Spline>();
 
-            if (linearOption)
-                splineObject.interpolationMode = Spline.InterpolationMode.Linear;
+            if (bLinearInterpolation)
+                splineComponent.interpolationMode = Spline.InterpolationMode.Linear;
             else
-                splineObject.interpolationMode = Spline.InterpolationMode.BSpline;
+                splineComponent.interpolationMode = Spline.InterpolationMode.BSpline;
 
             foreach (NetFileLane l in e.getLanes())
             {
                 foreach (double[] coordPair in l.shape)
                 {
-                    // Add Node
-                    GameObject splineNode = new GameObject("Node_" + edgeCounter++);
-                    splineNode.transform.SetParent(spline.transform);
-                    SplineNode splineNodeObject = splineNode.AddComponent<SplineNode>();
-                    splineNode.transform.position = new Vector3((float)coordPair[0]- xmin, 0, (float)coordPair[1]-ymin);
-                    splineObject.splineNodesArray.Add(splineNodeObject);
+                    GameObject splineNode = new GameObject("Node_" + nodeCounter++);
+                    splineNode.transform.SetParent(streetSegment.transform);
+                    SplineNode splineNodeComponent = splineNode.AddComponent<SplineNode>();
+                    splineNode.transform.position = new Vector3((float)coordPair[0]- map_x_min,
+                                                                0,
+                                                                (float)coordPair[1] - map_y_min);
+                    splineComponent.splineNodesArray.Add(splineNodeComponent);
                 }
 
                 // Add meshes
-                Material material = AssetDatabase.LoadAssetAtPath<Material>(PathConstants.pathRoadMaterial);
-                // --------- 20.10.13 ---------//
+                Material material = AssetDatabase.LoadAssetAtPath<Material>(
+                    PathConstants.pathRoadMaterial);
                 material.shader = Shader.Find("Standard");
                 material.SetFloat("_Glossiness", 0f);
-                /////////////////////////////////
-                MeshRenderer mRenderer = mRenderer = spline.GetComponent<MeshRenderer>();
+                MeshRenderer mRenderer = streetSegment.GetComponent<MeshRenderer>();
                 if (mRenderer == null)
                 {
-                    mRenderer = spline.AddComponent<MeshRenderer>();
+                    mRenderer = streetSegment.AddComponent<MeshRenderer>();
                 }
                 mRenderer.material = material;
-                // --------- 20.10.13 ---------//
                 mRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 mRenderer.receiveShadows = false;
-                /////////////////////////////////
 
-
-                SplineMesh sMesh = spline.AddComponent<SplineMesh>();
-                sMesh.spline = splineObject;
-                sMesh.baseMesh = AssetDatabase.LoadAssetAtPath<Mesh>(PathConstants.pathSuperSplinesBox);
-                sMesh.startBaseMesh = AssetDatabase.LoadAssetAtPath<Mesh>(PathConstants.pathSuperSplinesBox);
-                sMesh.endBaseMesh = AssetDatabase.LoadAssetAtPath<Mesh>(PathConstants.pathSuperSplinesBox);
+                SplineMesh sMesh = streetSegment.AddComponent<SplineMesh>();
+                sMesh.spline = splineComponent;
+                sMesh.baseMesh = AssetDatabase.LoadAssetAtPath<Mesh>(
+                    PathConstants.pathSuperSplinesBox);
+                sMesh.startBaseMesh = AssetDatabase.LoadAssetAtPath<Mesh>(
+                    PathConstants.pathSuperSplinesBox);
+                sMesh.endBaseMesh = AssetDatabase.LoadAssetAtPath<Mesh>(
+                    PathConstants.pathSuperSplinesBox);
                 sMesh.uvScale = new Vector2(uvScaleU, uvScaleV);
                 sMesh.xyScale = new Vector2(meshScaleX, 0);
-                //sMesh.segmentCount = 500;
-                //sMesh.segmentCount = 500 * 4;
                 sMesh.segmentCount = 50;
 
-
-                // (1.1) Add Lanes to polygon list for tree placement check
-                for (int i = 0; i < l.shape.Count - 1; i++)
+                for(int i = 0; i < l.shape.Count - 1; i++)
                 {
-                    double length = Math.Sqrt(Math.Pow(l.shape[i][0]-xmin - (l.shape[i + 1][0]-xmin), 2) + Math.Pow(l.shape[i][1]-ymin - (l.shape[i + 1][1]-ymin), 2));
+                    // (1.1) Add Lanes to polygon list for tree placement check
+                    double length = Math.Sqrt(
+                        Math.Pow(l.shape[i][0] - l.shape[i + 1][0], 2) +
+                        Math.Pow(l.shape[i][1] - l.shape[i + 1][1], 2));
                     // Calc the position (in line with the lane)
-                    float x1 = (float)l.shape[i][0]-xmin;
-                    float y1 = (float)l.shape[i][1]-ymin;
-                    float x2 = (float)l.shape[i + 1][0] - xmin;
-                    float y2 = (float)l.shape[i + 1][1] - ymin;
+                    float x1 = (float)l.shape[i][0] - map_x_min;
+                    float y1 = (float)l.shape[i][1] - map_y_min;
+                    float x2 = (float)l.shape[i + 1][0] - map_x_min;
+                    float y2 = (float)l.shape[i + 1][1] - map_y_min;
                     double Dx = x2 - x1;
                     double Dy = y2 - y1;
                     double D = Math.Sqrt(Dx * Dx + Dy * Dy);
-                    double W = 10;
-                    Dx = 0.5 * W * Dx / D;
-                    Dy = 0.5 * W * Dy / D;
-                    Vector3[] polygon = new Vector3[] { new Vector3((float)(x1 - Dy), 0, (float)(y1 + Dx)),
-                                                    new Vector3((float)(x1 + Dy), 0, (float)(y1 - Dx)),
-                                                    new Vector3((float)(x2 + Dy), 0, (float)(y2 - Dx)),
-                                                    new Vector3((float)(x2 - Dy), 0, (float)(y2 + Dx)) };
+                    double W = 5;
+                    Dx = W * Dx / D;
+                    Dy = W * Dy / D;
+                    Vector3[] polygon = new Vector3[] {
+                        new Vector3((float)(x1 - Dy), 0, (float)(y1 + Dx)),
+                        new Vector3((float)(x1 + Dy), 0, (float)(y1 - Dx)),
+                        new Vector3((float)(x2 + Dy), 0, (float)(y2 - Dx)),
+                        new Vector3((float)(x2 - Dy), 0, (float)(y2 + Dx))};
                     polygons.Add(polygon);
 
-
-                    // (2) Add Street Lamps (only if long enough)
+#if streetLamp
+                    // (2) Add street lamps if lane is long enough
                     if (length >= minLengthForStreetLamp)
                     {
                         float angle = Mathf.Atan2(y2 - y1, x2 - x1) * 180 / Mathf.PI;
 
-                        // Allway located at the middle of a street
+                        // position at the middle of the street
                         double ratioRotPoint = 0.5;
                         double ratio = 0.5 + streeLampDistance / length;
 
@@ -275,41 +279,37 @@ public class MapLoader
                         float xRotDest = (float)((1 - ratioRotPoint) * x1 + ratioRotPoint * x2);
                         float yRotDest = (float)((1 - ratioRotPoint) * y1 + ratioRotPoint * y2);
 
-#if streetLamp
+
                         GameObject streetLampPrefab = AssetDatabase.LoadMainAssetAtPath(PathConstants.pathLaterne) as GameObject;
                         GameObject streetLamp = GameObject.Instantiate(streetLampPrefab, new Vector3(xDest, 0, yDest), Quaternion.Euler(new Vector3(0, 0, 0)));
                         streetLamp.name = "StreetLight_" + streetLightCounter++;
                         streetLamp.transform.SetParent(network.transform);
                         streetLamp.transform.RotateAround(new Vector3(xRotDest, 0, yRotDest), Vector3.up, -90.0f);
                         streetLamp.transform.Rotate(Vector3.up, -angle);
-#endif
                     }
-                }
-
-            }
-
-
-        }
+#endif
+                } // end of for(int i = 0; i < l.shape.Count - 1; i++) statement
+            } // end of foreach (NetFileLane l in e.getLanes()) statement
+        } // end of foreach (NetFileEdge e in edges.Values) statement
 
         // (3) Draw all Junction areas ------------------------------------
-        MonoBehaviour.print("Inserting 3d Junctions");
+        UnityEngine.Debug.Log("Inserting junctions...");
 
         int junctionCounter = 0;
         foreach (NetFileJunction j in junctions.Values)
         {
             List<int> indices = new List<int>();
-
             Vector2[] vertices2D = new Vector2[j.shape.Count];
             for (int i = 0; i < j.shape.Count; i++)
             {
-                vertices2D[i] = new Vector3((float)(j.shape[i])[0] - xmin, (float)(j.shape[i])[1] - ymin);
+                vertices2D[i] = new Vector3((float)(j.shape[i])[0] - map_x_min,
+                                            (float)(j.shape[i])[1] - map_y_min);
             }
 
             // Use the triangulator to get indices for creating triangles
             Triangulator tr = new Triangulator(vertices2D);
             List<int> bottomIndices = new List<int>(tr.Triangulate());
             indices.AddRange(bottomIndices);
-
 
             // Create the Vector3 vertices
             Vector3[] vertices = new Vector3[vertices2D.Length];
@@ -337,17 +337,11 @@ public class MapLoader
 
             // Set up game object with mesh;
             GameObject junction3D = new GameObject("junction_" + junctionCounter++);
-            //MeshRenderer r = (MeshRenderer)junction3D.AddComponent(typeof(MeshRenderer));
-            //--- 2020 10 08 ---//
             MeshRenderer r = junction3D.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
-            // ----------------//
-            //Material material = Resources.Load<Material>(PathConstants.pathJunctionMaterial);
             Material material = AssetDatabase.LoadAssetAtPath<Material>(PathConstants.pathJunctionMaterial);
             r.material = material;
-            //--- 2020 10 13 ---//
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             r.receiveShadows = false;
-            // ----------------//
             MeshFilter filter = junction3D.AddComponent(typeof(MeshFilter)) as MeshFilter;
             filter.mesh = mesh;
             junction3D.transform.SetParent(network.transform);
@@ -368,10 +362,10 @@ public class MapLoader
                 foreach (NetFileLane l in j.incLanes)
                 {
                     // Calc the position (in line with the lane)
-                    float x1 = (float)l.shape[0][0] - xmin;
-                    float y1 = (float)l.shape[0][1] - ymin;
-                    float x2 = (float)l.shape[1][0] - xmin;
-                    float y2 = (float)l.shape[1][1] - ymin;
+                    float x1 = (float)l.shape[0][0] - map_x_min;
+                    float y1 = (float)l.shape[0][1] - map_y_min;
+                    float x2 = (float)l.shape[1][0] - map_x_min;
+                    float y2 = (float)l.shape[1][1] - map_y_min;
                     float length = (float)Math.Sqrt(Math.Pow(y2 - y1, 2) + Math.Pow(x2 - x1, 2));
                     float angle = Mathf.Atan2(y2 - y1, x2 - x1) * 180 / Mathf.PI;
 
@@ -381,10 +375,7 @@ public class MapLoader
                     float yDest = (float)((1 - ratio) * y1 + ratio * y2);
 
                     // Insert the 3d object, rotate from lane 90° to the right side and then orientate the traffic light towards the vehicles
-                    //--- 2020 10 08 ---//
-                    //GameObject trafficLightPrefab = AssetDatabase.LoadMainAssetAtPath(PathConstants.pathTrafficLight) as GameObject;
                     GameObject trafficLightPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PathConstants.pathTrafficLight);
-                    // ----------------//
                     GameObject trafficLight = GameObject.Instantiate(trafficLightPrefab, new Vector3(xDest, 0, yDest), Quaternion.Euler(new Vector3(0, 0, 0)));
                     trafficLight.name = "TrafficLight_" + j.id;
                     trafficLight.transform.SetParent(network.transform);
