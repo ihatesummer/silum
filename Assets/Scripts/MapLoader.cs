@@ -9,7 +9,6 @@ using System.Xml;
 public class MapLoader
 {
     static GameObject network;
-    public static string streetsFileName = "grid.net.xml";
     public static Dictionary<string, NetFileJunction> junctions;
     public static Dictionary<string, NetFileEdge> edges;
     public static Dictionary<string, NetFileLane> lanes;
@@ -23,30 +22,26 @@ public class MapLoader
     static float uvScaleV = 50;
     static float uvScaleU = 1;
     static float meshScaleX = 3.3f;
-    static float minLengthForStreetLamp = 12;
 
-    public static void parseXML(string sumoPath)
+    public static void parseNetXML(string mapFilePath)
     {
         network = new GameObject("StreetNetwork");
+        lanes = new Dictionary<string, NetFileLane>();
         junctions = new Dictionary<string, NetFileJunction>();
         edges = new Dictionary<string, NetFileEdge>();
-        parseJunctions(sumoPath);
-        parseEdges(sumoPath);
+        parseJunctions(mapFilePath);
+        parseEdges(mapFilePath);
     }
 
-    public static void parseJunctions(string sumoPath)
+    public static void parseJunctions(string mapFilePath)
     {
-        string mapFilePath = sumoPath +
-                             "/" +
-                             streetsFileName;
-
         XmlReaderSettings xmlReaderSetting =
             new XmlReaderSettings();
         xmlReaderSetting.IgnoreComments = true;
         xmlReaderSetting.IgnoreWhitespace = true;
 
-        using (XmlReader reader = XmlReader.Create(mapFilePath,
-                                                   xmlReaderSetting))
+        using (XmlReader reader = XmlReader.Create(
+            mapFilePath, xmlReaderSetting))
         {
             reader.ReadToFollowing("junction");
             while (reader.Read() && !reader.EOF)
@@ -83,22 +78,17 @@ public class MapLoader
                                     }
                             }
                             break;
-
                         default:
                             reader.Skip();
                             break;
-                    } // end of switch statement
-                } // end of if statement
-            }
+                    } // end of switch (reader.Name.ToString())
+                } // end of reader.NodeType == XmlNodeType.Element
+            } // end of while (reader.Read() && !reader.EOF)
         }
     }
 
-    public static void parseEdges(string sumoPath)
+    public static void parseEdges(string mapFilePath)
     {
-        string mapFilePath = sumoPath +
-                             "/" +
-                             streetsFileName;
-
         XmlReaderSettings xmlReaderSetting =
             new XmlReaderSettings();
         xmlReaderSetting.IgnoreComments = true;
@@ -125,45 +115,70 @@ public class MapLoader
                                 UnityEngine.Debug.Log("Map boundaries:" +
                                                       "\nmap_x_min: " + map_x_min +
                                                       "\tmap_y_min: " + map_y_min +
-                                                      "\nxmax: " + map_x_max +
-                                                      "\tymax: " + map_y_max);
+                                                      "\nmap_x_max: " + map_x_max +
+                                                      "\tmap_y_max: " + map_y_max);
                             }
                             break;
                         case "edge":
+                            string edgeId = "null";
+                            string laneId = "null";
                             if (reader.HasAttributes)
                             {
                                 if (reader.GetAttribute("function") != "internal")
                                 {
-                                    string edgeId = reader.GetAttribute("id");
-                                    string from = reader.GetAttribute("from");
-                                    string to = reader.GetAttribute("to");
-                                    string priority = reader.GetAttribute("priority");
-                                    string edgeShape = "null";
-
-                                    NetFileEdge edge = new NetFileEdge(edgeId,
-                                                                       from, to,
-                                                                       priority,
-                                                                       edgeShape);
-                                    if (!edges.ContainsKey(edgeId))
+                                    try
                                     {
-                                        edges.Add(edgeId, edge);
+                                        string edgeShape = reader.GetAttribute("shape");
                                     }
-
-                                    XmlReader innerReader = reader.ReadSubtree();
-                                    while (innerReader.Read())
+                                    catch (KeyNotFoundException)
                                     {
-                                        if ((innerReader.Name.ToString()=="lane") &&
-                                            innerReader.HasAttributes)
+                                        UnityEngine.Debug.LogWarning("not found error: edge attribute - shape ");
+                                    }
+                                    finally
+                                    {
+                                        string edgeShape = "null";
+                                        edgeId = reader.GetAttribute("id");
+                                        string from = reader.GetAttribute("from");
+                                        string to = reader.GetAttribute("to");
+                                        string priority = reader.GetAttribute("priority");
+                                        NetFileEdge edge = new NetFileEdge(edgeId,
+                                                                        from, to,
+                                                                        priority,
+                                                                        edgeShape);
+                                        if (!edges.ContainsKey(edgeId))
                                         {
-                                            string laneId = innerReader.GetAttribute("id");
-                                            string index = innerReader.GetAttribute("index");
-                                            float speed = float.Parse(innerReader.GetAttribute("speed"));
-                                            float length = float.Parse(innerReader.GetAttribute("length"));
-                                            string laneShape = innerReader.GetAttribute("shape");
-                                            edges[edgeId].addLane(laneId, index, speed, length, laneShape);
+                                            Debug.Log("Added edge " + edgeId);
+                                            edges.Add(edgeId, edge);
                                         }
+
+                                        XmlReader innerReader = reader.ReadSubtree();
+                                        while (innerReader.Read())
+                                        {
+                                            switch(innerReader.Name.ToString())
+                                            {
+                                                case "lane":
+                                                    if(innerReader.HasAttributes)
+                                                    {
+                                                        laneId = innerReader.GetAttribute(
+                                                            "id");
+                                                        string index = innerReader.GetAttribute(
+                                                            "index");
+                                                        float speed = float.Parse(
+                                                            innerReader.GetAttribute("speed"));
+                                                        float length = float.Parse(
+                                                            innerReader.GetAttribute("length"));
+                                                        string laneShape = innerReader.GetAttribute(
+                                                            "shape");
+                                                        edges[edgeId].addLane(
+                                                            laneId, index, speed, length, laneShape);
+                                                    }
+                                                    break;
+                                                default:
+                                                    break;
+                                            }
+                                        }
+                                        innerReader.Close();
                                     }
-                                    innerReader.Close();
                                 }
                             }
                             break;
@@ -184,7 +199,6 @@ public class MapLoader
         polygons = new List<Vector3[]>();
         bool bLinearInterpolation = true;
         int laneCounter = 0;
-        int streetLightCounter = 0;
         // (1) Draw all Edges
         UnityEngine.Debug.Log("Inserting street segments...");
         foreach (NetFileEdge e in edges.Values)
@@ -262,32 +276,6 @@ public class MapLoader
                         new Vector3((float)(x2 + Dy), 0, (float)(y2 - Dx)),
                         new Vector3((float)(x2 - Dy), 0, (float)(y2 + Dx))};
                     polygons.Add(polygon);
-
-#if streetLamp
-                    // (2) Add street lamps if lane is long enough
-                    if (length >= minLengthForStreetLamp)
-                    {
-                        float angle = Mathf.Atan2(y2 - y1, x2 - x1) * 180 / Mathf.PI;
-
-                        // position at the middle of the street
-                        double ratioRotPoint = 0.5;
-                        double ratio = 0.5 + streeLampDistance / length;
-
-                        float xDest = (float)((1 - ratio) * x1 + ratio * x2);
-                        float yDest = (float)((1 - ratio) * y1 + ratio * y2);
-
-                        float xRotDest = (float)((1 - ratioRotPoint) * x1 + ratioRotPoint * x2);
-                        float yRotDest = (float)((1 - ratioRotPoint) * y1 + ratioRotPoint * y2);
-
-
-                        GameObject streetLampPrefab = AssetDatabase.LoadMainAssetAtPath(PathConstants.pathLaterne) as GameObject;
-                        GameObject streetLamp = GameObject.Instantiate(streetLampPrefab, new Vector3(xDest, 0, yDest), Quaternion.Euler(new Vector3(0, 0, 0)));
-                        streetLamp.name = "StreetLight_" + streetLightCounter++;
-                        streetLamp.transform.SetParent(network.transform);
-                        streetLamp.transform.RotateAround(new Vector3(xRotDest, 0, yRotDest), Vector3.up, -90.0f);
-                        streetLamp.transform.Rotate(Vector3.up, -angle);
-                    }
-#endif
                 } // end of for(int i = 0; i < l.shape.Count - 1; i++) statement
             } // end of foreach (NetFileLane l in e.getLanes()) statement
         } // end of foreach (NetFileEdge e in edges.Values) statement
@@ -349,47 +337,5 @@ public class MapLoader
             // (3.1) Add junctions to polygon list for tree placement check
             polygons.Add(vertices);
         }
-
-        // (4) Draw Traffic Lights
-#if trafficLight
-        MonoBehaviour.print("Inserting 3d Traffic Lights");
-
-        foreach (NetFileJunction j in junctions.Values)
-        {
-            if (j.type == junctionTypeType.traffic_light)
-            {
-                int index = 0;
-                foreach (NetFileLane l in j.incLanes)
-                {
-                    // Calc the position (in line with the lane)
-                    float x1 = (float)l.shape[0][0] - map_x_min;
-                    float y1 = (float)l.shape[0][1] - map_y_min;
-                    float x2 = (float)l.shape[1][0] - map_x_min;
-                    float y2 = (float)l.shape[1][1] - map_y_min;
-                    float length = (float)Math.Sqrt(Math.Pow(y2 - y1, 2) + Math.Pow(x2 - x1, 2));
-                    float angle = Mathf.Atan2(y2 - y1, x2 - x1) * 180 / Mathf.PI;
-
-                    double ratio = (length - trafficLightDistance) / length;
-
-                    float xDest = (float)((1 - ratio) * x1 + ratio * x2);
-                    float yDest = (float)((1 - ratio) * y1 + ratio * y2);
-
-                    // Insert the 3d object, rotate from lane 90° to the right side and then orientate the traffic light towards the vehicles
-                    GameObject trafficLightPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PathConstants.pathTrafficLight);
-                    GameObject trafficLight = GameObject.Instantiate(trafficLightPrefab, new Vector3(xDest, 0, yDest), Quaternion.Euler(new Vector3(0, 0, 0)));
-                    trafficLight.name = "TrafficLight_" + j.id;
-                    trafficLight.transform.SetParent(network.transform);
-                    trafficLight.transform.RotateAround(new Vector3(x2, 0, y2), Vector3.up, -90.0f);
-                    trafficLight.transform.Rotate(Vector3.up, -angle);
-
-                    // Insert traffic light index as empty GameObject into traffic light
-                    GameObject TLindex = new GameObject("index");
-                    GameObject TLindexVal = new GameObject(Convert.ToString(index++));
-                    TLindexVal.transform.SetParent(TLindex.transform);
-                    TLindex.transform.SetParent(trafficLight.transform);
-                }
-            }
-        }
-#endif
     }
 }

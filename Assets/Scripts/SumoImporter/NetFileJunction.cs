@@ -29,12 +29,10 @@ namespace Assets.Scripts.SumoImporter.NetFileComponents
             {
                 NetFileLane l = new NetFileLane(stringPiece);
                 this.incLanes.Add(l);
-
-                // Add to global list
-                //if(!ImportAndGenerate.lanes.ContainsKey(l.id))
-                //    ImportAndGenerate.lanes.Add(l.id, l);
                 if(!MapLoader.lanes.ContainsKey(l.id))
+                {
                     MapLoader.lanes.Add(l.id, l);
+                }
             }
 
             // Get shape coordinates as List of tuple-arrays

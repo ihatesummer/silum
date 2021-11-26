@@ -42,10 +42,17 @@ namespace Assets.Scripts.SumoImporter.NetFileComponents
 
         public void addLane(string id, string index, float speed, float length, string shape)
         {
-            //NetFileLane lane = ImportAndGenerate.lanes[id];
-            NetFileLane lane = MapLoader.lanes[id];
-            lane.update(Convert.ToInt32(index), Convert.ToDouble(speed), Convert.ToDouble(length), shape);
-            this.lanes.Add(new NetFileLane(id, Convert.ToInt32(index), speed, length, shape));
+            try
+            {
+                NetFileLane lane = MapLoader.lanes[id];
+                lane.update(Convert.ToInt32(index), Convert.ToDouble(speed), Convert.ToDouble(length), shape);
+                this.lanes.Add(new NetFileLane(id, Convert.ToInt32(index), speed, length, shape));
+            }
+            catch (KeyNotFoundException)
+            {
+                UnityEngine.Debug.Log("Failed loading lane " + id);
+            }
+            
         }
 
         public List<NetFileLane> getLanes()
