@@ -11,7 +11,6 @@ namespace Assets.Scripts.SumoImporter.NetFileComponents
         public float x;
         public float y;
         public float z;
-
         public List<NetFileLane> incLanes;
         public List<double[]> shape;
 
@@ -24,14 +23,15 @@ namespace Assets.Scripts.SumoImporter.NetFileComponents
             this.z = z;
 
             // Get incoming Lanes
-            this.incLanes= new List<NetFileLane>();
-            foreach(string stringPiece in incLanes.Split(' '))
+            // UnityEngine.Debug.Log("NetFileJunction.cs incLanes passed: " + incLanes);
+            foreach (string laneName in incLanes.Split(' '))
             {
-                NetFileLane l = new NetFileLane(stringPiece);
-                this.incLanes.Add(l);
-                if(!MapLoader.lanes.ContainsKey(l.id))
+                NetFileLane lane = new NetFileLane(laneName);
+                // UnityEngine.Debug.Log("Incoming lane to NetFileJunction.cs: " + lane.id);
+                if(!MapLoader.lanes.ContainsKey(lane.id))
                 {
-                    MapLoader.lanes.Add(l.id, l);
+                    MapLoader.lanes.Add(lane.id, lane);
+                    // UnityEngine.Debug.Log(lane.id + " added to MapLoader.lanes");
                 }
             }
 

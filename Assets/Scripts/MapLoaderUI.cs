@@ -34,7 +34,7 @@ public class MapLoaderUI : EditorWindow
         {
             sumoFilePath = EditorUtility.OpenFolderPanel(
                 "Choose the folder containing the SUMO files." +
-                "(*.net.xml, *.rou.xml)", Application.dataPath, "");
+                "(*.net.xml, *.rou.xml)", Application.dataPath + "/SUMO", "");
             EditorGUILayout.TextField("SUMO location");
         }
         GUILayout.Space(15);
@@ -54,7 +54,7 @@ public class MapLoaderUI : EditorWindow
             {
                 EditorUtility.DisplayProgressBar("Generation Progress",
                                                  "Parsing SUMO files", 0.0f);
-                string streetsFileName = "grid.net.xml";
+                string streetsFileName = "road.net.xml";
                 string mapFilePath = sumoFilePath +
                                      "/" +
                                      streetsFileName;

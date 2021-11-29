@@ -44,45 +44,38 @@ public class MapLoader
             mapFilePath, xmlReaderSetting))
         {
             reader.ReadToFollowing("junction");
-            while (reader.Read() && !reader.EOF)
+            while (!reader.EOF)
             {
                 if (reader.NodeType == XmlNodeType.Element)
                 {
-                    switch (reader.Name.ToString())
+                    if (reader.Name.ToString() == "junction")
                     {
-                        case "junction":
-                            if (reader.HasAttributes)
+                        if (reader.HasAttributes && 
+                            reader.GetAttribute("type") != "internal")
+                        {
+                            string junctionId = reader.GetAttribute("id");
+                            junctionTypeType type = 
+                                (junctionTypeType)Enum.Parse(
+                                    typeof(junctionTypeType),
+                                    reader.GetAttribute("type"));
+                            float x = float.Parse(reader.GetAttribute("x"));
+                            float y = float.Parse(reader.GetAttribute("y"));
+                            float z = 0f;
+                            string incomingLanes = reader.GetAttribute("incLanes");
+                            string junctionShape = reader.GetAttribute("shape");
+                            // Debug.Log("Incoming junction: " + incomingLanes);
+                            NetFileJunction junction = new NetFileJunction(
+                                junctionId, type, x, y, z,
+                                incomingLanes, junctionShape);
+                            if (!junctions.ContainsKey(junction.id))
                             {
-                                if (reader.GetAttribute("type") != "internal")
-                                {
-                                    string junctionId = reader.GetAttribute("id");
-                                    junctionTypeType type = 
-                                        (junctionTypeType)Enum.Parse(typeof(junctionTypeType),
-                                                                     reader.GetAttribute("type"));
-                                    float x = float.Parse(reader.GetAttribute("x"));
-                                    float y = float.Parse(reader.GetAttribute("y"));
-                                    float z = 0f;
-                                    string incLanes = reader.GetAttribute("incLanes");
-                                    string junctionShape = reader.GetAttribute("shape");
-
-                                    NetFileJunction junction = new NetFileJunction(junctionId,
-                                                                                   type,
-                                                                                   x, y, z,
-                                                                                   incLanes,
-                                                                                   junctionShape);
-
-                                    if (!junctions.ContainsKey(junction.id))
-                                    {
-                                        junctions.Add(junction.id, junction);
-                                    }
-                                    }
+                                junctions.Add(junction.id, junction);
                             }
-                            break;
-                        default:
-                            reader.Skip();
-                            break;
-                    } // end of switch (reader.Name.ToString())
+                        }
+                    }
+                    else reader.Skip();
                 } // end of reader.NodeType == XmlNodeType.Element
+                reader.Read();
             } // end of while (reader.Read() && !reader.EOF)
         }
     }
@@ -93,102 +86,74 @@ public class MapLoader
             new XmlReaderSettings();
         xmlReaderSetting.IgnoreComments = true;
         xmlReaderSetting.IgnoreWhitespace = true;
-        using (XmlReader reader = XmlReader.Create(mapFilePath,
-                                                   xmlReaderSetting))
+        using (XmlReader reader = XmlReader.Create(
+            mapFilePath, xmlReaderSetting))
         {
             reader.ReadToFollowing("net");
             while (reader.Read() && !reader.EOF)
             {
                 if (reader.NodeType == XmlNodeType.Element)
                 {
-                    switch (reader.Name.ToString())
+                    if(reader.Name.ToString() == "location" &&
+                       reader.HasAttributes)
                     {
-                        case "location":
-                            if (reader.HasAttributes)
+                        string boundary = reader.GetAttribute("convBoundary");
+                        string[] boundaries = boundary.Split(',');
+                        map_x_min = float.Parse(boundaries[0]);
+                        map_y_min = float.Parse(boundaries[1]);
+                        map_x_max = float.Parse(boundaries[2]);
+                        map_y_max = float.Parse(boundaries[3]);
+                        // UnityEngine.Debug.Log("Map boundaries:\t" +
+                        //                       "map_x_range: (" + map_x_min +
+                        //                       ", " + map_x_max + ") " +
+                        //                       "map_y_range (: " + map_y_min +
+                        //                       ", " + map_y_max + ") ");
+                    }
+                    else if(reader.Name.ToString() == "edge" &&
+                            reader.HasAttributes)
+                    {
+                        if (reader.GetAttribute("function") != "internal")
+                        {
+                            string edgeId = reader.GetAttribute("id");
+                            string from = reader.GetAttribute("from");
+                            string to = reader.GetAttribute("to");
+                            string priority = reader.GetAttribute("priority");
+                            string edgeShape = "null";
+                            NetFileEdge edge = new NetFileEdge(
+                                edgeId, from, to,
+                                priority, edgeShape);
+                            if (!edges.ContainsKey(edgeId))
                             {
-                                string boundary = reader.GetAttribute("convBoundary");
-                                string[] boundaries = boundary.Split(',');
-                                map_x_min = float.Parse(boundaries[0]);
-                                map_y_min = float.Parse(boundaries[1]);
-                                map_x_max = float.Parse(boundaries[2]);
-                                map_y_max = float.Parse(boundaries[3]);
-                                UnityEngine.Debug.Log("Map boundaries:" +
-                                                      "\nmap_x_min: " + map_x_min +
-                                                      "\tmap_y_min: " + map_y_min +
-                                                      "\nmap_x_max: " + map_x_max +
-                                                      "\tmap_y_max: " + map_y_max);
+                                // Debug.Log("Added edge " + edgeId);
+                                edges.Add(edgeId, edge);
                             }
-                            break;
-                        case "edge":
-                            string edgeId = "null";
-                            string laneId = "null";
-                            if (reader.HasAttributes)
-                            {
-                                if (reader.GetAttribute("function") != "internal")
-                                {
-                                    try
-                                    {
-                                        string edgeShape = reader.GetAttribute("shape");
-                                    }
-                                    catch (KeyNotFoundException)
-                                    {
-                                        UnityEngine.Debug.LogWarning("not found error: edge attribute - shape ");
-                                    }
-                                    finally
-                                    {
-                                        string edgeShape = "null";
-                                        edgeId = reader.GetAttribute("id");
-                                        string from = reader.GetAttribute("from");
-                                        string to = reader.GetAttribute("to");
-                                        string priority = reader.GetAttribute("priority");
-                                        NetFileEdge edge = new NetFileEdge(edgeId,
-                                                                        from, to,
-                                                                        priority,
-                                                                        edgeShape);
-                                        if (!edges.ContainsKey(edgeId))
-                                        {
-                                            Debug.Log("Added edge " + edgeId);
-                                            edges.Add(edgeId, edge);
-                                        }
 
-                                        XmlReader innerReader = reader.ReadSubtree();
-                                        while (innerReader.Read())
-                                        {
-                                            switch(innerReader.Name.ToString())
-                                            {
-                                                case "lane":
-                                                    if(innerReader.HasAttributes)
-                                                    {
-                                                        laneId = innerReader.GetAttribute(
-                                                            "id");
-                                                        string index = innerReader.GetAttribute(
-                                                            "index");
-                                                        float speed = float.Parse(
-                                                            innerReader.GetAttribute("speed"));
-                                                        float length = float.Parse(
-                                                            innerReader.GetAttribute("length"));
-                                                        string laneShape = innerReader.GetAttribute(
-                                                            "shape");
-                                                        edges[edgeId].addLane(
-                                                            laneId, index, speed, length, laneShape);
-                                                    }
-                                                    break;
-                                                default:
-                                                    break;
-                                            }
-                                        }
-                                        innerReader.Close();
-                                    }
+                            // Reading lanes inside each edge
+                            XmlReader innerReader = reader.ReadSubtree();
+                            while (innerReader.Read())
+                            {
+                                if (innerReader.Name.ToString() == "lane" &&
+                                    innerReader.HasAttributes)
+                                {
+                                    string laneId = innerReader.GetAttribute(
+                                                "id");
+                                    string index = innerReader.GetAttribute(
+                                        "index");
+                                    float speed = float.Parse(
+                                        innerReader.GetAttribute("speed"));
+                                    float length = float.Parse(
+                                        innerReader.GetAttribute("length"));
+                                    string laneShape = innerReader.GetAttribute(
+                                        "shape");
+                                    // Debug.Log("Adding lane " + laneId + " to edge " + edgeId + "...");
+                                    edges[edgeId].addLane(
+                                        laneId, index, speed, length, laneShape);
                                 }
                             }
-                            break;
-                        case "junction":
-                            reader.Skip();
-                            break;
-                        default:
-                            reader.Skip();
-                            break;
-                    } // end of switch(reader.Name.ToString()) statement
+                            innerReader.Close(); 
+                        }
+                    }
+                    else reader.Skip();
                 } // end of if(reader.NodeType == XmlNodeType.Element) statement
             }
         }
@@ -200,7 +165,6 @@ public class MapLoader
         bool bLinearInterpolation = true;
         int laneCounter = 0;
         // (1) Draw all Edges
-        UnityEngine.Debug.Log("Inserting street segments...");
         foreach (NetFileEdge e in edges.Values)
         {
             int nodeCounter = 0;
@@ -281,8 +245,6 @@ public class MapLoader
         } // end of foreach (NetFileEdge e in edges.Values) statement
 
         // (3) Draw all Junction areas ------------------------------------
-        UnityEngine.Debug.Log("Inserting junctions...");
-
         int junctionCounter = 0;
         foreach (NetFileJunction j in junctions.Values)
         {

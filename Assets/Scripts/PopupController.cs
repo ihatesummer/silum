@@ -13,8 +13,6 @@ public class PopupController : MonoBehaviour
     void Start()
     {
         animator = GetComponent<Animator>();
-        message = GameObject.Find("Message").GetComponent<Text>();
-        message.text = "Loading...";
     }
 
     public void ChangeAnimationState(string newState)

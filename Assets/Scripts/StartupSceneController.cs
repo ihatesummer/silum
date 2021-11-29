@@ -8,9 +8,6 @@ public class StartupSceneController : MonoBehaviour
     private GameObject startButton;
     private GameObject loadingPopup;
     private AudioSource audioSource;
-    private float timer = 0.0f;
-    private float globaltime = 0.0f;
-    private float timeWindow = 0.3f;
 
     // Start is called before the first frame update
     void Start()
@@ -27,15 +24,6 @@ public class StartupSceneController : MonoBehaviour
             audioSource.Play();
             startButton.GetComponent<StartButtonController>().ChangeAnimationState("Click");
             loadingPopup.GetComponent<PopupController>().ChangeAnimationState("VerticalPopup");
-        }
-
-        globaltime += Time.deltaTime;
-        if(timer<timeWindow){
-            timer += Time.deltaTime;
-        }
-        else{
-            loadingPopup.GetComponent<PopupController>().message.text += string.Format("\n{0}", globaltime);
-            timer = 0.0f;
         }
     }
 }

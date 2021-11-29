@@ -50,7 +50,7 @@ namespace Assets.Scripts.SumoImporter.NetFileComponents
             }
             catch (KeyNotFoundException)
             {
-                UnityEngine.Debug.Log("Failed loading lane " + id);
+                UnityEngine.Debug.Log("Failed adding lane " + id);
             }
             
         }
