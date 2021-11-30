@@ -4,5 +4,17 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/Startup.unity
+    guid: 2cda990e2423bbf4892e6590ba056729
+  - enabled: 1
+    path: Assets/Scenes/Barcelona.unity
+    guid: e805627a6ef6b57439b776b2f9d5d3a9
+  - enabled: 1
+    path: Assets/Scenes/Arc de Triomphe.unity
+    guid: 5bf6a1eafc108254e8ba8211d86d2b3d
+  - enabled: 1
+    path: Assets/Scenes/KU Vicinity.unity
+    guid: c3b669c9bd569f84d97e542199a23c3b
   m_configObjects: {}

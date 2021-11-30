@@ -23,8 +23,8 @@ namespace Assets.Scripts.SumoImporter.NetFileComponents
             //this.to = ImportAndGenerate.junctions[to];
             try
             {
-                this.from = MapLoader.junctions[from];
-                this.to = MapLoader.junctions[to];
+                this.from = MapImporter.junctions[from];
+                this.to = MapImporter.junctions[to];
 
             }
             catch (KeyNotFoundException)
@@ -44,7 +44,7 @@ namespace Assets.Scripts.SumoImporter.NetFileComponents
         {
             try
             {
-                NetFileLane lane = MapLoader.lanes[id];
+                NetFileLane lane = MapImporter.lanes[id];
                 lane.update(Convert.ToInt32(index), Convert.ToDouble(speed), Convert.ToDouble(length), shape);
                 this.lanes.Add(new NetFileLane(id, Convert.ToInt32(index), speed, length, shape));
             }

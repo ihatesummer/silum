@@ -28,10 +28,10 @@ namespace Assets.Scripts.SumoImporter.NetFileComponents
             {
                 NetFileLane lane = new NetFileLane(laneName);
                 // UnityEngine.Debug.Log("Incoming lane to NetFileJunction.cs: " + lane.id);
-                if(!MapLoader.lanes.ContainsKey(lane.id))
+                if(!MapImporter.lanes.ContainsKey(lane.id))
                 {
-                    MapLoader.lanes.Add(lane.id, lane);
-                    // UnityEngine.Debug.Log(lane.id + " added to MapLoader.lanes");
+                    MapImporter.lanes.Add(lane.id, lane);
+                    // UnityEngine.Debug.Log(lane.id + " added to MapImporter.lanes");
                 }
             }
 
