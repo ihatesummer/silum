@@ -40,29 +40,17 @@ public class MapImporterUI : EditorWindow
         GUILayout.Space(15);
         if (GUILayout.Button("Load map"))
         {
-            try
-            {
-                GameObject MainCamera = GameObject.FindGameObjectWithTag("MainCamera");
-                MainCamera.SetActive(true);
-            }
-            catch (Exception e)
-            {
-                Debug.Log(e.GetBaseException());
-            }
-
-            if (streets)
-            {
-                EditorUtility.DisplayProgressBar("Generation Progress",
-                                                 "Parsing SUMO files", 0.0f);
-                string streetsFileName = "road.net.xml";
-                string mapFilePath = sumoFilePath +
-                                     "/" +
-                                     streetsFileName;
-                MapImporter.parseNetXML(mapFilePath);
-                EditorUtility.DisplayProgressBar("Generation Progress",
-                                                 "Generating Street Network", 0.2f);
-                MapImporter.drawStreetNetwork();
-            }
+            EditorUtility.DisplayProgressBar("Generation Progress",
+                                             "Parsing SUMO files", 0.0f);
+            string streetsFileName = "road.net.xml";
+            string mapFilePath = sumoFilePath +
+                                 "/" +
+                                 streetsFileName;
+            MapImporter.parseNetXML(mapFilePath);
+            EditorUtility.DisplayProgressBar("Generation Progress",
+                                             "Generating Street Network",
+                                             0.2f);
+            MapImporter.drawStreetNetwork();
             EditorUtility.ClearProgressBar();
             this.Close();
         }

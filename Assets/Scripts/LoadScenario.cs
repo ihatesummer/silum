@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 
 public class LoadScenario : MonoBehaviour
 {
+    // Each function is designated by UnityEditor Button click event
     public void LoadBarcelona()
     {
         SceneManager.LoadScene("Barcelona");
