@@ -17,39 +17,61 @@ public class VehicleManager : MonoBehaviour
     [Header("Vehicle prefabs")]
     public GameObject Prefab_Real;
     public GameObject Prefab_Estimated;
+    [Space(10f)]
     public string mapChoice = "grid";
+    public float vehicle_elevation = 0.5f;
     private string mobilityDataFile = "mobility.xml";
     private Dictionary<float, List<VehicleInfo>> vehicleInfos = 
         new Dictionary<float, List<VehicleInfo>>();
-        // set of vehicle information by time 
+        // set of vehicle information by time
+    private float simulationTime = 0f;
+    private int simulationStep = 0;
+    private GameObject Vehicles;
+    private GameObject vehicle;
+
     void Start()
     {
         string mobilityDataPath = Application.dataPath + "/SUMO/" +
                                   mapChoice + "/" + mobilityDataFile;
 
         parseMobility(mobilityDataPath);
-        foreach( VehicleInfo v_info in vehicleInfos[1])
-        {
-            Debug.Log( v_info.v_id + ": (" +
-                       v_info.v_posX + "," +
-                       v_info.v_posZ + ")");
-        }
-
-        GameObject vehicle = Instantiate(Prefab_Real) as GameObject;
-        vehicle.transform.position = new Vector3(
-            212.30f,
-            0.5f,
-            98.40f);
-        vehicle.transform.rotation = UnityEngine.Quaternion.Euler(
-            0,
-            90f,
-            0);
-        vehicle.name = "v1_real";
+        Vehicles = new GameObject("Vehicles");
     }
 
     void Update()
     {
+        int maxTime = 60;
+        simulationTime += Time.deltaTime;
+        if (Mathf.Floor(simulationTime) > simulationStep)
+        {
+            simulationStep ++;
+        }
         
+        if (simulationStep <= maxTime)
+        {
+            foreach( VehicleInfo v_info in vehicleInfos[simulationStep])
+            {
+                string vehicleObjectName = "vehicle_no." + v_info.v_id + "_real";
+                if (! GameObject.Find(vehicleObjectName))
+                {
+                    vehicle = Instantiate(Prefab_Real) as GameObject;
+                    vehicle.name = "vehicle_no." + v_info.v_id + "_real";
+                    vehicle.transform.SetParent(Vehicles.transform);
+                }
+                else
+                {
+                    vehicle = GameObject.Find(vehicleObjectName);
+                }
+                vehicle.transform.position = new Vector3(
+                    v_info.v_posX,
+                    vehicle_elevation,
+                    v_info.v_posZ);
+                vehicle.transform.rotation = UnityEngine.Quaternion.Euler(
+                    0,
+                    v_info.v_angle,
+                    0);
+            }
+        }
     }
 
     void parseMobility(string mobilityDataPath)
