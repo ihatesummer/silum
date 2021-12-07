@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 12/07/21 13:27:14 by Eclipse SUMO jtrrouter Version 1.7.0
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/jtrrouterConfiguration.xsd">
+
+    <input>
+        <net-file value="road.net.xml"/>
+        <route-files value="flows.xml"/>
+    </input>
+
+    <output>
+        <output-file value="road.rou.xml"/>
+    </output>
+
+    <processing>
+        <no-internal-links value="true"/>
+        <accept-all-destinations value="true"/>
+    </processing>
+
+    <time>
+        <begin value="0"/>
+        <end value="60"/>
+    </time>
+
+</configuration>
+-->
+
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+    <vehicle id="0.0" depart="0.00">
+        <route edges="C1D1 D1C1 C1C0 C0B0 B0A0 A0A1 A1B1 B1B2 B2B3 B3A3 A3A2 A2A1 A1A2 A2A3 A3B3 B3C3 C3C2 C2B2 B2C2 C2D2 D2D3 D3C3 C3B3 B3B2 B2B1 B1C1 C1B1 B1B0 B0C0 C0C1 C1C2 C2C3 C3D3 D3D2 D2C2 C2C1"/>
+    </vehicle>
+    <vehicle id="1.0" depart="0.00">
+        <route edges="B1A1 A1A2 A2A3 A3B3 B3B2 B2A2 A2A1 A1B1 B1B0 B0A0"/>
+    </vehicle>
+    <vehicle id="2.0" depart="0.00">
+        <route edges="C3B3 B3A3 A3A2 A2A1 A1A2 A2B2 B2B3 B3B2 B2B1 B1C1 C1B1 B1B0 B0C0 C0C1 C1C2 C2D2 D2C2 C2C3 C3C2 C2B2 B2A2 A2A3 A3B3 B3C3 C3D3 D3D2 D2D3 D3C3"/>
+    </vehicle>
+    <vehicle id="3.0" depart="0.00">
+        <route edges="D1D2 D2C2 C2C3 C3B3 B3A3 A3A2 A2A1 A1A0 A0B0 B0B1 B1B2 B2C2 C2D2 D2D3 D3C3 C3C2 C2C1 C1D1 D1D0 D0C0 C0B0 B0C0 C0D0 D0D1 D1C1 C1C0 C0C1 C1B1 B1B0 B0A0 A0A1 A1A2 A2A3 A3B3 B3C3 C3D3 D3D2 D2D1"/>
+    </vehicle>
+    <vehicle id="4.0" depart="0.00">
+        <route edges="B2C2 C2C3 C3D3 D3D2 D2D1 D1D0 D0C0 C0B0 B0B1 B1A1 A1A2 A2A1 A1A0 A0B0"/>
+    </vehicle>
+</routes>
