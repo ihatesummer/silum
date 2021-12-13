@@ -3,7 +3,7 @@ public class PathConstants
 {
     public static string pathPolyBuildingsMaterial = "Materials/PolyBuildingsColor";
     public static string pathRoadMaterial = "Assets/Materials/road_material.mat";
-    public static string pathJunctionMaterial = "Assets/Materials/road_material.mat";
+    public static string pathJunctionMaterial = "Assets/Materials/road_material_junction.mat";
 
     // SuperSpline Box for Street Mesh
     public static string pathSuperSplinesBox = "Assets/SuperSplinesPro/SuperSplinesSamples/SampleAssets/Models/box.fbx";

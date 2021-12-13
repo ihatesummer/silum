@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 12/10/21 17:16:54 by Eclipse SUMO jtrrouter Version 1.7.0
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/jtrrouterConfiguration.xsd">
+
+    <input>
+        <net-file value="road.net.xml"/>
+        <route-files value="flows.xml"/>
+    </input>
+
+    <output>
+        <output-file value="road.rou.xml"/>
+    </output>
+
+    <processing>
+        <no-internal-links value="true"/>
+        <accept-all-destinations value="true"/>
+    </processing>
+
+    <time>
+        <begin value="0"/>
+        <end value="60"/>
+    </time>
+
+</configuration>
+-->
+
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+    <vehicle id="0.0" depart="0.00">
+        <route edges="C10C11 C11C10 C10C9 C9B9 B9A1 A1B4 B4B3 B3C3 C3C2 C2C1 C1C12 C12B12 B12B11 B11B10 B10B9 B9C9 C9C8 C8B8 B8C8 C8C7 C7C6 C6B6 B6A1 A1B10 B10B11 B11A1 A1B8 B8A1 A1B1 B1C1 C1C2 C2C3 C3C4 C4B4 B4B5 B5B4 B4A1 A1B12 B12C12 C12C11 C11B11 B11B12 B12A1 A1B5 B5C5 C5C4 C4C3 C3B3 B3B2 B2A1 A1B9 B9B10 B10A1 A1B6 B6B7 B7B6 B6B5 B5A1 A1B11"/>
+    </vehicle>
+    <vehicle id="1.0" depart="0.00">
+        <route edges="B1B2 B2C2 C2B2 B2B3 B3A1 A1B6 B6B5 B5B4 B4B3 B3B4 B4C4 C4C3 C3C4 C4C5 C5B5 B5B6 B6B7 B7C7 C7C6 C6B6 B6A1 A1B2 B2B1 B1B12 B12A1 A1B8 B8C8 C8C9 C9B9 B9A1 A1B5 B5C5 C5C6 C6C7 C7B7 B7B8 B8B9 B9C9 C9C10 C10B10 B10C10 C10C11 C11B11 B11B10 B10B9 B9B10 B10A1 A1B10 B10B11 B11B12 B12B1"/>
+    </vehicle>
+    <vehicle id="2.0" depart="0.00">
+        <route edges="C1C12 C12C11 C11B11 B11A1 A1B6 B6B7 B7B8 B8A1 A1B10 B10B11 B11C11 C11C12 C12C1 C1B1 B1B2 B2B3 B3A1 A1B3 B3B4 B4C4 C4B4 B4A1 A1B12 B12C12 C12B12 B12A1 A1B5 B5B6 B6A1 A1B1 B1B12 B12B1 B1A1 A1B9 B9A1 A1B4 B4B3 B3C3 C3B3 B3B2 B2C2 C2C1 C1C2 C2B2 B2A1 A1B7 B7B6 B6C6 C6B6 B6B5 B5B4 B4B5 B5C5 C5C4 C4C5 C5B5 B5A1 A1B2 B2B1 B1C1"/>
+    </vehicle>
+    <vehicle id="3.0" depart="0.00">
+        <route edges="C6C5 C5C4 C4C3 C3C4 C4C5 C5C6 C6C7 C7B7 B7A1 A1B3 B3C3 C3C2 C2C3 C3B3 B3A1 A1B5 B5B6 B6C6 C6B6 B6B7 B7C7 C7C6"/>
+    </vehicle>
+    <vehicle id="4.0" depart="0.00">
+        <route edges="B5A1 A1B11"/>
+    </vehicle>
+    <vehicle id="5.0" depart="0.00">
+        <route edges="B12A1 A1B11 B11C11 C11C10 C10C11 C11B11 B11B12 B12C12 C12B12 B12B1 B1B12 B12B11 B11B10 B10B9 B9A1 A1B4 B4B3 B3C3 C3C4 C4B4 B4B5 B5B6 B6C6 C6C7 C7C8 C8B8 B8B7 B7C7 C7B7 B7B8 B8A1 A1B1 B1C1 C1C2 C2C3 C3B3 B3B4 B4A1 A1B3 B3A1 A1B7 B7A1"/>
+    </vehicle>
+    <vehicle id="6.0" depart="0.00">
+        <route edges="A1B11 B11C11"/>
+    </vehicle>
+    <vehicle id="7.0" depart="0.00">
+        <route edges="C10C9 C9B9 B9B10 B10B11 B11B12 B12B1 B1B2 B2A1 A1B11 B11B10 B10C10 C10C11 C11C12 C12C1 C1B1 B1A1 A1B2 B2B1 B1C1 C1C12 C12B12 B12A1 A1B1 B1B12 B12C12 C12C11 C11C10 C10B10 B10B9 B9C9 C9C10"/>
+    </vehicle>
+    <vehicle id="8.0" depart="0.00">
+        <route edges="B12B1 B1B2 B2B3 B3B2 B2B1 B1A1 A1B4 B4C4 C4C5 C5C6 C6C5 C5C4 C4C3 C3B3 B3C3 C3C4 C4B4 B4A1 A1B2 B2A1 A1B10 B10B11 B11C11 C11C12 C12B12 B12A1 A1B3 B3B4 B4B3 B3A1 A1B12 B12B11 B11B12 B12C12 C12C1 C1B1 B1C1 C1C2 C2B2 B2C2 C2C1 C1C12 C12C11 C11C10 C10C9 C9B9 B9A1"/>
+    </vehicle>
+    <vehicle id="9.0" depart="0.00">
+        <route edges="C3C4 C4C3 C3C2 C2C1 C1B1 B1C1 C1C12 C12B12 B12C12 C12C1 C1C2 C2C3 C3B3 B3A1 A1B4 B4C4 C4C5 C5B5 B5C5 C5C4 C4B4 B4B3 B3C3"/>
+    </vehicle>
+</routes>

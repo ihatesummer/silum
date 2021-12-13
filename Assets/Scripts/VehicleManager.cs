@@ -19,22 +19,25 @@ public class VehicleManager : MonoBehaviour
     public GameObject Prefab_Real;
     public GameObject Prefab_Estimated;
     [Space(10f)]
+    [Header("Etc")]
     public string mapChoice = "grid";
-    public float vehicle_elevation = 0.5f;
+    private float vehicle_elevation = 0.5f;
     private string mobilityDataFile = "mobility.xml";
-    private Dictionary<float, List<VehicleInfo>> vehicleInfos = 
-        new Dictionary<float, List<VehicleInfo>>();
-        // set of vehicle information by time
-    public float simulationTime = 0f;
-    public int simulationStep = 0;
-    public float LerpTimer = 0f;
-    public float maxTime;
-    private GameObject Vehicles;
+    public static Dictionary<float, List<VehicleInfo>> vehicleInfos;
+    // set of vehicle information by time
+    public static float simulationTime = 0f;
+    public static int simulationStep = 0;
+    public static float LerpTimer = 0f;
+    public static float maxTime;
+    private static GameObject Vehicles;
     private GameObject vehicle;
+    public static int nVehicle;
 
     void Start()
     {
         Application.targetFrameRate = 60;
+        nVehicle = 0;
+        vehicleInfos = new Dictionary<float, List<VehicleInfo>>();
         string mobilityDataPath = Application.dataPath + "/SUMO/" +
                                   mapChoice + "/" + mobilityDataFile;
 
@@ -46,7 +49,6 @@ public class VehicleManager : MonoBehaviour
     {
         simulationTime += Time.deltaTime;
         LerpTimer += Time.deltaTime;
-
         if (simulationTime > simulationStep + 1)
         {
             simulationStep++;
@@ -60,8 +62,15 @@ public class VehicleManager : MonoBehaviour
                 string vehicleObjectName = "vehicle_no." + v_info.v_id + "_real";
                 if (!GameObject.Find(vehicleObjectName))
                 {
-                    vehicle = generateVehicle(true, vehicleObjectName, v_info);
+                    vehicle = generateVehicle(
+                        true,
+                        vehicleObjectName,
+                        v_info.v_posX,
+                        v_info.v_posZ,
+                        v_info.v_angle);
                     attachLabel(vehicle, v_info);
+                    createVehiclePosUI(vehicle, nVehicle, vehicleObjectName);
+                    nVehicle++;
                 }
                 else
                 {
@@ -69,6 +78,7 @@ public class VehicleManager : MonoBehaviour
                     moveVehicle(vehicle, v_info);
                     // in case vehicle rotated, correct the label rotation
                     updateLabelRotation(vehicle);
+                    updateVehiclePosUI(vehicle, vehicleObjectName);
                 }
             }
         }
@@ -130,9 +140,9 @@ public class VehicleManager : MonoBehaviour
             }
         }
     }
-    GameObject generateVehicle(bool IsReal,
+    public GameObject generateVehicle(bool IsReal,
                         string vehicleObjectName,
-                        VehicleInfo v_info)
+                        float x, float z, float angle)
     {
         if (IsReal)
         {
@@ -145,13 +155,9 @@ public class VehicleManager : MonoBehaviour
         vehicle.name = vehicleObjectName;
         vehicle.transform.SetParent(Vehicles.transform);
         vehicle.transform.position = new Vector3(
-            v_info.v_posX,
-            vehicle_elevation,
-            v_info.v_posZ);
+            x, vehicle_elevation, z);
         vehicle.transform.rotation = UnityEngine.Quaternion.Euler(
-            0,
-            v_info.v_angle,
-            0);
+            0, angle, 0);
         return vehicle;
     }
 
@@ -168,6 +174,49 @@ public class VehicleManager : MonoBehaviour
         UIlabel.GetComponent<RectTransform>().localScale = new Vector3(2, 2, 1);
         TMPcomponent.fontSize = 46;
         TMPcomponent.alignment = TextAlignmentOptions.Center;
+    }
+
+    void createVehiclePosUI(GameObject vehicle, int nVehicle, string vehicleObjectName)
+    {
+        float UI_pos_x = -750f;
+        float UI_pos_y = 480f;
+        float UI_linspacings = 45f;
+
+        GameObject canvas = GameObject.Find("Canvas");
+        GameObject UI_vehiclePos = new GameObject(vehicleObjectName + "_pos");
+        TextMeshProUGUI TMPcomponent = UI_vehiclePos.AddComponent<TextMeshProUGUI>();
+        string coord_xz = "(" + vehicle.transform.position.x +
+                          "," + vehicle.transform.position.z + ")";
+        TMPcomponent.text = "Vehicle " + 
+                            nVehicle.ToString() +
+                            ": " + coord_xz;
+        UI_vehiclePos.transform.SetParent(canvas.transform);
+        UI_vehiclePos.transform.localPosition = new Vector3(
+            UI_pos_x,
+            UI_pos_y - nVehicle*UI_linspacings,
+            0);
+        UI_vehiclePos.GetComponent<RectTransform>().sizeDelta = new Vector2(370, 50);
+        TMPcomponent.fontSize = 30;
+        TMPcomponent.alignment = TextAlignmentOptions.TopLeft;
+    }
+
+    void updateVehiclePosUI(GameObject vehicle, string vehicleObjectName)
+    {
+        GameObject UI_vehiclePos = GameObject.Find(vehicleObjectName + "_pos");
+        TextMeshProUGUI TMPcomponent = UI_vehiclePos.GetComponent<TextMeshProUGUI>();
+        int correctionIndex = TMPcomponent.text.IndexOf(":") + 1;
+        string coord_xz = get2DcoordPairs(vehicle.transform.position);
+        TMPcomponent.text = TMPcomponent.text.Substring(0, correctionIndex) + coord_xz;
+    }
+
+    string get2DcoordPairs(Vector3 coord)
+    {
+        string coord_xz = "(" +
+                          vehicle.transform.position.x.ToString("F2") +
+                          "," +
+                          vehicle.transform.position.z.ToString("F2")
+                          + ")";
+        return coord_xz;
     }
 
     void moveVehicle(GameObject vehicle, VehicleInfo v_info)

@@ -19,9 +19,8 @@ public class MapImporter
     static float map_y_min;
     static float map_y_max;
     public static List<Vector3[]> polygons;
-    static float uvScaleV = 1;
-    static float uvScaleU = 1;
-    static float meshScaleX = 3.3f;
+    static Vector2 uvScale_road = new Vector2(1, 50);
+    static float meshScaleX = 3.2f;
 
     public static void parseNetXML(string mapFilePath)
     {
@@ -204,7 +203,7 @@ public class MapImporter
                     PathConstants.pathSuperSplinesBox);
                 sMesh.endBaseMesh = AssetDatabase.LoadAssetAtPath<Mesh>(
                     PathConstants.pathSuperSplinesBox);
-                sMesh.uvScale = new Vector2(uvScaleU, uvScaleV);
+                sMesh.uvScale = uvScale_road;
                 sMesh.xyScale = new Vector2(meshScaleX, 0);
                 sMesh.segmentCount = 50;
 
