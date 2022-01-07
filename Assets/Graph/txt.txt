@@ -1,1 +1,0 @@
-Graph Model (WPF).NetFramework11 사용
