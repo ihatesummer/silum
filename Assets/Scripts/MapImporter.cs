@@ -122,19 +122,19 @@ public class MapImporter
                             priority, edgeShape);
                         edges.Add(edgeId, edge);
 
-                        // Read lanes inside each edge
+                        // Map 특성 받아오고 제장하는 것
                         XmlReader subReader = reader.ReadSubtree();
                         while (!subReader.EOF)
                         {
                             if (subReader.Name.ToString() == "lane")
                             {
-                                string laneId = subReader.GetAttribute("id");
-                                string index = subReader.GetAttribute("index");
+                                string laneId = subReader.GetAttribute("id"); // ID
+                                string index = subReader.GetAttribute("index"); // Index
                                 float speed = float.Parse(
-                                    subReader.GetAttribute("speed"));
+                                    subReader.GetAttribute("speed")); // 이거는 필요 없을듯
                                 float length = float.Parse(
                                     subReader.GetAttribute("length"));
-                                string laneShape = subReader.GetAttribute("shape");
+                                string laneShape = subReader.GetAttribute("shape"); // 꼭짓점 처리 -> 벽을 세워야 한다고 들음
                                 edges[edgeId].addLane(
                                     laneId, index, speed, length, laneShape);
                             }

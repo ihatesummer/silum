@@ -3,7 +3,18 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - Mirror
+  - Vehicle1
+  - Vehicle2
+  - Vehicle3
+  - Vehicle4
+  - Vehicle5
+  - car1
+  - car2
+  - car3
+  - car4
+  - car5
   layers:
   - Default
   - TransparentFX
