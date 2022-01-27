@@ -468,7 +468,7 @@ GameObject:
   - component: {fileID: 759377989}
   m_Layer: 0
   m_Name: Beam
-  m_TagString: Untagged
+  m_TagString: car1
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -569,6 +569,7 @@ MonoBehaviour:
   countText4: {fileID: 1216948645}
   countText5: {fileID: 1214406664}
   timeText: {fileID: 2033339589}
+  oneSecond: 0.25
 --- !u!120 &759377990
 LineRenderer:
   m_ObjectHideFlags: 0
@@ -781,7 +782,7 @@ GameObject:
   - component: {fileID: 966190945}
   m_Layer: 0
   m_Name: Beam
-  m_TagString: Untagged
+  m_TagString: car5
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -820,6 +821,7 @@ MonoBehaviour:
   countText4: {fileID: 1216948645}
   countText5: {fileID: 1214406664}
   timeText: {fileID: 2033339589}
+  oneSecond: 0.25
 --- !u!120 &966190946
 LineRenderer:
   m_ObjectHideFlags: 0
@@ -1013,7 +1015,7 @@ GameObject:
   - component: {fileID: 1124680042}
   m_Layer: 0
   m_Name: Beam
-  m_TagString: Untagged
+  m_TagString: car2
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1052,6 +1054,7 @@ MonoBehaviour:
   countText4: {fileID: 1216948645}
   countText5: {fileID: 1214406664}
   timeText: {fileID: 2033339589}
+  oneSecond: 0.25
 --- !u!120 &1124680043
 LineRenderer:
   m_ObjectHideFlags: 0
@@ -1480,7 +1483,7 @@ GameObject:
   - component: {fileID: 1355463088}
   - component: {fileID: 1355463087}
   m_Layer: 0
-  m_Name: Plane
+  m_Name: "\uB545"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1676,7 +1679,7 @@ GameObject:
   - component: {fileID: 1454485159}
   m_Layer: 0
   m_Name: Beam
-  m_TagString: Untagged
+  m_TagString: car4
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1715,6 +1718,7 @@ MonoBehaviour:
   countText4: {fileID: 1216948645}
   countText5: {fileID: 1214406664}
   timeText: {fileID: 2033339589}
+  oneSecond: 0.25
 --- !u!120 &1454485160
 LineRenderer:
   m_ObjectHideFlags: 0
@@ -1891,7 +1895,7 @@ GameObject:
   - component: {fileID: 1463003541}
   m_Layer: 0
   m_Name: Beam
-  m_TagString: Untagged
+  m_TagString: car3
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1930,6 +1934,7 @@ MonoBehaviour:
   countText4: {fileID: 1216948645}
   countText5: {fileID: 1214406664}
   timeText: {fileID: 2033339589}
+  oneSecond: 0.25
 --- !u!120 &1463003542
 LineRenderer:
   m_ObjectHideFlags: 0
@@ -2347,6 +2352,7 @@ GameObject:
   - component: {fileID: 1719703216}
   - component: {fileID: 1719703215}
   - component: {fileID: 1719703214}
+  - component: {fileID: 1719703218}
   m_Layer: 0
   m_Name: Car1
   m_TagString: car1
@@ -2432,6 +2438,19 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1719703218
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1719703213}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f43e858153029a4c95bec359de89cd6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  oneSecond: 0.25
 --- !u!1 &1915058240
 GameObject:
   m_ObjectHideFlags: 0
