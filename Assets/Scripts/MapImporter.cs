@@ -124,7 +124,6 @@ public class MapImporter
                             priority, edgeShape);
                         edges.Add(edgeId, edge);
 
-                        // Read lanes inside each edge
                         XmlReader subReader = reader.ReadSubtree();
                         while (!subReader.EOF)
                         {
