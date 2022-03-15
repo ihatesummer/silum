@@ -100,7 +100,7 @@ public class MapImporter
             new XmlReaderSettings();
         xmlReaderSetting.IgnoreComments = true;
         xmlReaderSetting.IgnoreWhitespace = true;
-        
+
         using (XmlReader reader = XmlReader.Create(
             mapFilePath, xmlReaderSetting))
         {
@@ -110,7 +110,9 @@ public class MapImporter
                 if (reader.NodeType == XmlNodeType.Element)
                 {
                     if(reader.Name.ToString() == "edge" &&
-                       reader.GetAttribute("function") != "internal")
+                       reader.GetAttribute("function") != "internal" &&
+                       reader.GetAttribute("function") != "crossing" &&
+                       reader.GetAttribute("function") != "walkingarea")
                     {
                         string edgeId = reader.GetAttribute("id");
                         string from = reader.GetAttribute("from");
@@ -126,21 +128,25 @@ public class MapImporter
                         XmlReader subReader = reader.ReadSubtree();
                         while (!subReader.EOF)
                         {
-                            if (subReader.Name.ToString() == "lane")
+                            if (reader.NodeType == XmlNodeType.Element)
                             {
-                                string laneId = subReader.GetAttribute("id");
-                                string index = subReader.GetAttribute("index");
-                                float speed = float.Parse(
-                                    subReader.GetAttribute("speed"));
-                                float length = float.Parse(
-                                    subReader.GetAttribute("length"));
-                                string laneShape = subReader.GetAttribute("shape");
-                                edges[edgeId].addLane(
-                                    laneId, index, speed, length, laneShape);
+                                if (subReader.Name.ToString() == "lane")
+                                {
+                                    string laneId = subReader.GetAttribute("id");
+                                    string index = subReader.GetAttribute("index");
+                                    float speed = float.Parse(
+                                        subReader.GetAttribute("speed"));
+                                    float length = float.Parse(
+                                        subReader.GetAttribute("length"));
+                                    string laneShape = subReader.GetAttribute("shape");
+                                    edges[edgeId].addLane(
+                                        laneId, index, speed, length, laneShape);
+                                }
+                                else subReader.Skip();
                             }
                             subReader.Read();
                         }
-                        subReader.Close(); 
+                        subReader.Close();
                     }
                     else reader.Skip();
                 }
