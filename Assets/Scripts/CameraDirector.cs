@@ -9,11 +9,13 @@ public class CameraDirector : MonoBehaviour
     private GameObject targetVehicle;
     private string vehicleID_str;
     private Camera main_cam;
+    private Vector3 overview_position;
 
     void Start()
     {
         main_cam =  this.GetComponent<Camera>();
         UI_viewMode = GameObject.Find("ViewMode");
+        overview_position = this.transform.position;
     }
 
     void Update()
@@ -47,7 +49,7 @@ public class CameraDirector : MonoBehaviour
     void setShoulderView(GameObject targetVehicle)
     {
         this.transform.SetParent(targetVehicle.transform);
-        this.transform.localPosition = new Vector3(0, 3, -6);
+        this.transform.localPosition = new Vector3(0, 4, -8);
         this.transform.localRotation = UnityEngine.Quaternion.Euler(
             15, 0, 0);
     }
@@ -55,13 +57,13 @@ public class CameraDirector : MonoBehaviour
     void setShoulderView_viewmodeUI(string vehicleID_str)
     {
         int vehicleID = int.Parse(vehicleID_str);
-        UI_viewMode.GetComponent<TextMeshProUGUI>().text = "<Vehicle " + vehicleID + ">";
+        UI_viewMode.GetComponent<TextMeshProUGUI>().text = "Vehicle " + vehicleID;
     }
 
     void setOverView()
     {
         this.transform.parent = null;
-        this.transform.localPosition = new Vector3(150, 350, 158);
+        this.transform.localPosition = overview_position;
         this.transform.localRotation = UnityEngine.Quaternion.Euler(
             90, 0, 0);
         UI_viewMode.GetComponent<TextMeshProUGUI>().text = "Overview";

@@ -6,10 +6,7 @@ using UnityEngine;
 public class VehicleMsg
 {
     public bool IsAnchor {get; set;}
-    public Vector2 XY_mean {get; set;}
-    public Vector2 XY_var {get; set;}
-    public float AOA_mean {get; set;}
-    public float AOA_var {get; set;}
+    public Vector2 Position_Estimate {get; set;}
 }
 
 public class MessagePassing : MonoBehaviour
@@ -33,11 +30,7 @@ public class MessagePassing : MonoBehaviour
 
     void Update()
     {
-        if (VehicleManager.nVehicle < 2)
-        {
-            return;
-        }
-        foreach (VehicleInfo v_info in VehicleManager.vehicleInfos[VehicleManager.simulationStep])
+        foreach (VehicleInfo v_info in VehicleManager.vehicleInfos[VehicleManager.simulationStep.ToString("F2")])
             {
                 int id = v_info.v_id;
                 string vehicleObjectName = "vehicle_no." + v_info.v_id + "_real";
@@ -48,26 +41,22 @@ public class MessagePassing : MonoBehaviour
                     messages.Add(id, new VehicleMsg
                     {
                         IsAnchor = false,
-                        XY_mean = selfMeasurement_position(
-                            vehicle.transform.position),
-                        XY_var = new Vector2(1, 1),
-                        AOA_mean = selfMeasurement_angle(
-                            vehicle.transform.eulerAngles.y),
-                        AOA_var = 1
+                        Position_Estimate = selfMeasurement_position(
+                            vehicle.transform.position)
                     });
                     if (id == 0) { messages[id].IsAnchor = true; }
-
                     vehicle = generateVehicle_mp(
                         vehicleObjectName_mp,
-                        messages[id].XY_mean[0],
-                        messages[id].XY_mean[1],
-                        messages[id].AOA_mean);
+                        messages[id].Position_Estimate,
+                        vehicle.transform.rotation);
                 }
                 else
                 {
                     // message updates
                     GameObject vehicle_mp = GameObject.Find(vehicleObjectName_mp);
-                    moveVehicle_mp(vehicle_mp, messages[id]);
+                    messages[id].Position_Estimate = selfMeasurement_position(
+                            vehicle.transform.position);
+                    moveVehicle_mp(vehicle_mp, messages[id].Position_Estimate, vehicle.transform.rotation);
                 }
 
             }
@@ -93,8 +82,8 @@ public class MessagePassing : MonoBehaviour
 
     Vector2 selfMeasurement_position(Vector3 realPosition)
     {
-        float noiseX = variance_SelfPos / Mathf.Sqrt(2);
-        float noiseZ = variance_SelfPos / Mathf.Sqrt(2);
+        float noiseX = NextGaussian(0, variance_SelfPos / Mathf.Sqrt(2));
+        float noiseZ = NextGaussian(0, variance_SelfPos / Mathf.Sqrt(2));
 
         float estimation_x = realPosition.x + noiseX;
         float estimation_z = realPosition.z + noiseZ;
@@ -111,9 +100,8 @@ public class MessagePassing : MonoBehaviour
         return estimation_AOA;
     }
 
-    GameObject generateVehicle_mp(
-                        string vehicleObjectName,
-                        float x, float z, float angle)
+    GameObject generateVehicle_mp(string vehicleObjectName,
+                        Vector2 pos_estimate, Quaternion rotation)
     {
 
         vehicle = Instantiate(Prefab_MP) as GameObject;
@@ -121,15 +109,15 @@ public class MessagePassing : MonoBehaviour
         GameObject Vehicles = GameObject.Find("Vehicles");
         vehicle.transform.SetParent(Vehicles.transform);
         vehicle.transform.position = new Vector3(
-            x, vehicle_elevation, z);
-        vehicle.transform.rotation = UnityEngine.Quaternion.Euler(
-            0, angle, 0);
+            pos_estimate[0], vehicle_elevation, pos_estimate[1]);
+        vehicle.transform.rotation = rotation;
         return vehicle;
     }
 
-    void moveVehicle_mp(GameObject vehicle, VehicleMsg msg)
+    void moveVehicle_mp(GameObject vehicle, Vector2 position, Quaternion rotation)
     {
         vehicle.transform.position = new Vector3(
-            msg.XY_mean[0], vehicle_elevation, msg.XY_mean[1]);
+            position[0], vehicle_elevation, position[1]);
+        vehicle.transform.rotation = rotation;
     }
 }

@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 using System.Xml;
+using System.IO;
 using TMPro;
 
 public class VehicleInfo
@@ -22,9 +24,8 @@ public class VehicleManager : MonoBehaviour
     [Header("Etc")]
     public string mapChoice = "grid";
     private float vehicle_elevation = 0.5f;
-    private string mobilityDataFile = "mobility.xml";
-    public static Dictionary<float, List<VehicleInfo>> vehicleInfos;
-    // set of vehicle information by time
+    private string mobilityDataFile = "mobility.csv";
+    public static Dictionary<string, List<VehicleInfo>> vehicleInfos;
     public static float simulationTime = 0f;
     public static int simulationStep = 0;
     public static float LerpTimer = 0f;
@@ -37,7 +38,7 @@ public class VehicleManager : MonoBehaviour
     {
         Application.targetFrameRate = 60;
         nVehicle = 0;
-        vehicleInfos = new Dictionary<float, List<VehicleInfo>>();
+        vehicleInfos = new Dictionary<string, List<VehicleInfo>>();
         string mobilityDataPath = Application.dataPath + "/SUMO/" +
                                   mapChoice + "/" + mobilityDataFile;
 
@@ -48,16 +49,10 @@ public class VehicleManager : MonoBehaviour
     void Update()
     {
         simulationTime += Time.deltaTime;
-        LerpTimer += Time.deltaTime;
-        if (simulationTime > simulationStep + 1)
+        string simulationTime_str = simulationTime.ToString("F2");
+        if (simulationTime < maxTime)
         {
-            simulationStep++;
-            LerpTimer = 0;
-        }
-
-        if (simulationStep <= maxTime - 1)
-        {
-            foreach (VehicleInfo v_info in vehicleInfos[simulationStep])
+            foreach (VehicleInfo v_info in vehicleInfos[simulationTime_str])
             {
                 string vehicleObjectName = "vehicle_no." + v_info.v_id + "_real";
                 if (!GameObject.Find(vehicleObjectName))
@@ -75,6 +70,7 @@ public class VehicleManager : MonoBehaviour
                 else
                 {
                     vehicle = GameObject.Find(vehicleObjectName);
+
                     moveVehicle(vehicle, v_info);
                     // in case vehicle rotated, correct the label rotation
                     updateLabelRotation(vehicle);
@@ -86,58 +82,35 @@ public class VehicleManager : MonoBehaviour
 
     void parseMobility(string mobilityDataPath)
     {
-        XmlReaderSettings xmlReaderSetting =
-            new XmlReaderSettings();
-        xmlReaderSetting.IgnoreComments = true;
-        xmlReaderSetting.IgnoreWhitespace = true;
-
-        using (XmlReader reader = XmlReader.Create(
-            mobilityDataPath, xmlReaderSetting))
-        {
-            reader.ReadToFollowing("timestep");
-            while (!reader.EOF)
+        using (StreamReader sr = new StreamReader(mobilityDataPath)){
+            string line = sr.ReadLine();
+            string old_time = "dummy";
+            string time_str = "";
+            while ((line = sr.ReadLine()) != null)
             {
-                if (reader.NodeType == XmlNodeType.Element)
-                {
-                    if (reader.Name.ToString() == "timestep")
-                    {
-                        float time = float.Parse(
-                            reader.GetAttribute("time"));
-                        maxTime = time;
-                        vehicleInfos.Add(time, new List<VehicleInfo>());
-
-                        XmlReader subReader = reader.ReadSubtree();
-                        while (!subReader.EOF)
-                        {
-                            if (subReader.Name.ToString() == "vehicle")
-                            {
-                                int id = (int)float.Parse(
-                                    subReader.GetAttribute("id"));
-                                float posX = float.Parse(
-                                    subReader.GetAttribute("x"));
-                                float posZ = float.Parse(
-                                    subReader.GetAttribute("y"));
-                                float angle = float.Parse(
-                                    subReader.GetAttribute("angle"));
-                                float speed = float.Parse(
-                                    subReader.GetAttribute("speed"));
-                                vehicleInfos[time].Add(new VehicleInfo
-                                {
-                                    v_id = id,
-                                    v_posX = posX,
-                                    v_posZ = posZ,
-                                    v_angle = angle,
-                                    v_speed = speed
-                                });
-                            }
-                            subReader.Read();
-                        }
-                        subReader.Close();
-                    }
-                    else reader.Skip();
+                string[] entries = line.Split(',');
+                double time = float.Parse(entries[0]);
+                time_str = time.ToString("F2");
+                int id = (int)float.Parse(entries[1]);
+                float x = float.Parse(entries[2]);
+                float z = float.Parse(entries[3]);
+                float ang = float.Parse(entries[4]);
+                float vel = float.Parse(entries[5]);
+                if (old_time != time_str){
+                    vehicleInfos.Add(time_str, new List<VehicleInfo>());
                 }
-                reader.Read();
+                vehicleInfos[time_str].Add(new VehicleInfo
+                {
+                    v_id = id,
+                    v_posX = z, // intentional x and z swap
+                    v_posZ = x, // intentional x and z swap
+                    v_angle = ang,
+                    v_speed = vel
+                });
+                maxTime = (float)time;
+                old_time = time_str;
             }
+
         }
     }
     public GameObject generateVehicle(bool IsReal,
@@ -163,6 +136,7 @@ public class VehicleManager : MonoBehaviour
 
     void attachLabel(GameObject vehicle, VehicleInfo v_info)
     {
+        GameObject canvas = GameObject.Find("Canvas");
         GameObject UIlabel = new GameObject("UI_label");
         TextMeshPro TMPcomponent = UIlabel.AddComponent<TextMeshPro>();
         TMPcomponent.text = v_info.v_id.ToString();
@@ -178,25 +152,26 @@ public class VehicleManager : MonoBehaviour
 
     void createVehiclePosUI(GameObject vehicle, int nVehicle, string vehicleObjectName)
     {
-        float UI_pos_x = -750f;
-        float UI_pos_y = 480f;
-        float UI_linspacings = 45f;
+        float UI_pos_x = -330f;
+        float UI_pos_y = 170f;
+        float UI_linspacings = 25f;
 
         GameObject canvas = GameObject.Find("Canvas");
         GameObject UI_vehiclePos = new GameObject(vehicleObjectName + "_pos");
         TextMeshProUGUI TMPcomponent = UI_vehiclePos.AddComponent<TextMeshProUGUI>();
-        string coord_xz = "(" + vehicle.transform.position.x +
+        string coord_xz = " (" + vehicle.transform.position.x +
                           "," + vehicle.transform.position.z + ")";
-        TMPcomponent.text = "Vehicle " + 
+        TMPcomponent.text = "V" + 
                             nVehicle.ToString() +
-                            ": " + coord_xz;
+                            ":" + coord_xz;
+        TMPcomponent.color = new Color32(0, 0, 0, 255);
         UI_vehiclePos.transform.SetParent(canvas.transform);
         UI_vehiclePos.transform.localPosition = new Vector3(
             UI_pos_x,
             UI_pos_y - nVehicle*UI_linspacings,
             0);
         UI_vehiclePos.GetComponent<RectTransform>().sizeDelta = new Vector2(370, 50);
-        TMPcomponent.fontSize = 30;
+        TMPcomponent.fontSize = 16;
         TMPcomponent.alignment = TextAlignmentOptions.TopLeft;
     }
 
@@ -221,18 +196,11 @@ public class VehicleManager : MonoBehaviour
 
     void moveVehicle(GameObject vehicle, VehicleInfo v_info)
     {
-        Vector3 previous_pos = new Vector3(
-            vehicleInfos[simulationStep][v_info.v_id].v_posX,
+        Vector3 new_pos = new Vector3(
+            v_info.v_posX,
             vehicle_elevation,
-            vehicleInfos[simulationStep][v_info.v_id].v_posZ);
-        Vector3 next_pos = new Vector3(
-            vehicleInfos[simulationStep + 1][v_info.v_id].v_posX,
-            vehicle_elevation,
-            vehicleInfos[simulationStep + 1][v_info.v_id].v_posZ);
-        vehicle.transform.position = Vector3.Lerp(
-            previous_pos,
-            next_pos,
-            LerpTimer);
+            v_info.v_posZ);
+        vehicle.transform.position = new_pos;
         vehicle.transform.rotation = UnityEngine.Quaternion.Euler(
             0,
             v_info.v_angle,
